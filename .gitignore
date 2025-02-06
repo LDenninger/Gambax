@@ -1,0 +1,6 @@
+*.pyc
+pycache
+*/pycache
+
+*.egg-info
+*/node_modules

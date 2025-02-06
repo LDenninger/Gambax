@@ -1,0 +1,5 @@
+markdown-it-py
+mdit_plain
+openai
+flask
+tqdm

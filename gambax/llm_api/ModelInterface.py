@@ -3,11 +3,7 @@ from abc import abstractmethod
 import threading
 
 
-class ModelWrapper(ModelInterface):
 
-    def __init__(self, name: str):
-        super().__init__(name)
-        self._async = threading.Lock()
 
 
 
@@ -18,7 +14,7 @@ class ModelInterface:
 
         self._async
 
-    def __call__(self, messages: List[str], callback: Optional[callable], *args, **kwargs):
+    def __call__(self, messages: List[str], callback: Optional[callable] = None, *args, **kwargs):
 
         if callback is not None:
             self._async_wrapper(callback, messages=messages, *args, **kwargs)
@@ -42,3 +38,9 @@ class ModelInterface:
     @abstractmethod
     def call_impl(self, messages: List[str], *args, **kwargs) -> str:
         raise NotImplementedError("'call_impl()' must be defined by implemented models.")
+    
+class ModelWrapper(ModelInterface):
+
+    def __init__(self, name: str):
+        super().__init__(name)
+        self._async = threading.Lock()
