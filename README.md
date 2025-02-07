@@ -135,7 +135,7 @@ They can either explicitly called by hand or implicitely called by the LLM if it
 
 ### Custom Services
 You can easily define custom services by implementing the `Service` base class in `./services/service.py`.
-We use the (OpenAI funciton-calling)[https://platform.openai.com/docs/guides/function-calling] convention
+We use the [OpenAI funciton-calling](https://platform.openai.com/docs/guides/function-calling) convention
 ```python
 class MyService(Service):
   name: str = "my_service"
@@ -147,9 +147,9 @@ class MyService(Service):
     ## Your logic goes here ##
     return response
 
-    def get_tool(self):
-      # Define OpenAI API function call 
-      return {}
+  def get_tool(self):
+    # Define OpenAI API function call 
+    return {}
 ```
 
 
