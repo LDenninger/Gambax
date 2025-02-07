@@ -7,7 +7,6 @@ Gambax is an easy-to-use development tool for (distributed) LLM applications. It
 <ul style="list-style: none; margin: 0; padding: 0.1;">
   <li>💥 Local server hosting an API for the LLMs</li>
   <li>💥 Command-line tool to chat with your LLM</li>
-  <li>💥 Seamless integration of distributed systems with central LLM</li>
   <li>💥 Easy definition of services for advanced functionalities</li>
   <li>💥 Seamless integration with existing LLM framework</li>
   <li>💥 VS Code extension for inline completion</li>
