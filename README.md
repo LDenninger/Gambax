@@ -1,12 +1,5 @@
-<div style="display: flex; align-items: center; justify-content: center; margin: 20px 0;">
-  <img 
-    src="misc/foreground_gamba.png" 
-    alt="Logo"
-    style="height: 180px; margin-right: 1rem;"
-  />
-  <span style="font-size: 8rem; font-weight: bold;">
-    Gambax
-  </span>
+<div style="text-align: center;">
+    <img src="misc/logo.png" alt="Gambax" />
 </div>
 
 ## ❓ What is Gambax?
