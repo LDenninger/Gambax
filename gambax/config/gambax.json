@@ -10,6 +10,31 @@
             "params": {
                 "model_name": "gpt-4o-mini"
             }
+        },
+        {
+            "target": "gambax.services.image_generation.ImageGenerationService",
+            "params": {
+                "model_name": "dall-e-3"
+            }
         }
-    ]
+    ],
+    "commands": [
+        {
+            "target": "gambax.interfaces.cli.command.ContinueChatCommand",
+            "params": {}
+        },
+        {
+            "target": "gambax.interfaces.cli.command.InsertFileCommand",
+            "params": {}
+        },
+        {
+            "target": "gambax.interfaces.cli.command.SilverSearcherCommand",
+            "params": {}
+        },
+        {
+            "target": "gambax.interfaces.cli.command.ExecuteCommand",
+            "params": {}
+        }
+    ],
+    "custom_models": {}
 }

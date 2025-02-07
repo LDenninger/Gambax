@@ -3,8 +3,9 @@ import json
 import re
 
 from pydantic import BaseModel
-from gambax.llm_api.ModelInterface import ModelInterface
-from gambax.llm_api.chatgpt import ChatGPT
+from gambax.models.ModelInterface import ModelInterface
+from gambax.models.chatgpt import ChatGPT
+from gambax.services import Service
 
 SYSTEM_CALL = """
     You are ChatGPT, a large language model trained by OpenAI. 
@@ -43,11 +44,13 @@ functions = [
     }
 ]
 
-class InlineCompletion:
+class InlineCompletion(Service):
 
     name = "inline_completion"
 
     def __init__(self, model_name: Literal["gpt-3.5-turbo", "gpt-4o-mini"] = "gpt-3.5-turbo", system_call: str=SYSTEM_CALL):
+
+        super().__init__(model_name, input_signature=["line", "context_before", "context_after", "language"], output_signature=['line_diff'])
 
         self.model = None
         self.setup_model(model_name)
@@ -57,7 +60,7 @@ class InlineCompletion:
     def setup_model(self, model_name: Literal["gpt-3.5-turbo", "gpt-4o-mini"]):
         self.model = ChatGPT(model_name=model_name, max_tokens = 300)
 
-    def __call__(self, line: str, context_before: str, context_after: str, language: str=None):
+    def request_impl(self, line: str, context_before: str, context_after: str, language: str=None):
 
         if line is None or line.strip() == "" and context_before.strip() == "" and context_after.strip() == "":
             return ""
@@ -79,18 +82,18 @@ class InlineCompletion:
         return ""
     
     def _parse_line_diff(self, completion: str, line: str):
-            line_diff = completion
-            # Ensure line_diff is actually a diff and not the full line
-            if line_diff.startswith(line):
-                line_diff = line_diff[len(line):]
-            else:
-                line_strip = line.strip()
-                line_re = re.escape(line_strip)
-                match = re.search(line_re, line_diff)
-                if match:
-                    line_diff = line_diff[match.end():]
+        line_diff = completion
+        # Ensure line_diff is actually a diff and not the full line
+        if line_diff.startswith(line):
+            line_diff = line_diff[len(line):]
+        else:
+            line_strip = line.strip().split(' ')[-1]
+            line_re = re.escape(line_strip)
+            match = re.search(line_re, line_diff)
+            if match:
+                line_diff = line_diff[match.end():]
 
-            print(f"Original line: '{line}'")
-            print(f"Adjusted line_diff: '{line_diff}'")
+        print(f"Original line: '{line}'")
+        print(f"Adjusted line_diff: '{line_diff}'")
 
-            return line_diff
+        return line_diff

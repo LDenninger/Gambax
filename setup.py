@@ -10,10 +10,10 @@ setup(
     version='0.1.0',
     author='Luis Denninger',
     author_email='l_denninger@uni-bonn.de',
-    description='A brief description of your package',
+    description='Gambax is a development tool for distributed AI systems.',
     long_description=open('README.md').read(),
     long_description_content_type='text/markdown',
-    url='https://github.com/yourusername/your_package_name',
+    url='https://github.com/LDenninger/Gambax',
     packages=find_packages(),
     classifiers=[
         'Programming Language :: Python :: 3',
@@ -24,8 +24,8 @@ setup(
     install_requires=read_requirements(),
     entry_points={
         'console_scripts': [
-            'gambax=gambax.interfaces.bash_cli:main',
-            'gambax-server=gambax.server.main:main',
+            'gambax=gambax.interfaces.cli.main:main',
+            'gambax-server=gambax.core.server:launch_server',
             'gambax-config=gambax.config.cli:main',
         ],
     },

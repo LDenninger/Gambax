@@ -29,6 +29,7 @@ class ChatGPT(ModelInterface):
                  top_p: float=1.0,
                  api_key: str=None
                  ):
+        super().__init__(model_name)
         ##-- Parameters --##
         self.model_name = model_name
         self.temperature = temperature
@@ -39,7 +40,6 @@ class ChatGPT(ModelInterface):
 
     
     def call_impl(self, messages: Dict[str,str], **kwargs):
-
 
         if "response_format" in kwargs:
             response = self.client.beta.chat.completions.parse(
@@ -60,10 +60,17 @@ class ChatGPT(ModelInterface):
                 top_p=self.top_p,
                 **kwargs
             )
-            if hasattr(response.choices[0].message, "function_call"):
+            if hasattr(response.choices[0].message, "function_call") and response.choices[0].message.function_call is not None:
                 return {
                     "function": response.choices[0].message.function_call.name,
                     "arguments": response.choices[0].message.function_call.arguments
                 }
+            if hasattr(response.choices[0].message, "tool_calls") and response.choices[0].message.tool_calls is not None:
+                return {
+                    "function": response.choices[0].message.tool_calls[0].function.name,
+                    "arguments": response.choices[0].message.tool_calls[0].function.arguments,
+                }
             response_message = response.choices[0].message.content
         return response_message
+
+        

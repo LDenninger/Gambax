@@ -4,3 +4,8 @@ pycache
 
 *.egg-info
 */node_modules
+*.vsix
+*/out/*
+
+gambax write me a script that computes the fibonacci numbers up to 20 numbers
+gambax \\cc Change the script such that it takes an argument that determines how many numbers are computed

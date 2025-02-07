@@ -2,17 +2,15 @@ from typing import List, Optional
 from abc import abstractmethod
 import threading
 
-
-
-
-
-
 class ModelInterface:
+    """
+        The model interface to be implemented by all LLM models
+        to be used with the LLM server.
+    """
 
     def __init__(self, name: str):
         self.name = name
 
-        self._async
 
     def __call__(self, messages: List[str], callback: Optional[callable] = None, *args, **kwargs):
 
@@ -38,6 +36,9 @@ class ModelInterface:
     @abstractmethod
     def call_impl(self, messages: List[str], *args, **kwargs) -> str:
         raise NotImplementedError("'call_impl()' must be defined by implemented models.")
+    
+    def __str__(self):
+        return self.name
     
 class ModelWrapper(ModelInterface):
 

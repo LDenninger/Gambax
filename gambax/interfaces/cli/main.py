@@ -9,21 +9,22 @@ from markdown_it import MarkdownIt
 from mdit_plain.renderer import RendererPlain
 import subprocess
 import time
+import webbrowser
 
-from gambax.server import LLMClient
-from gambax.utils.internal import load_config
-
+from gambax.core import LLMClient
+from gambax.utils.internal import load_config, load_chat, save_chat
+from gambax.interfaces.cli.command import load_commands, parse_commands
 
 CONFIG_FILE = "configs/gambax_bash.json"
 ALLOWED_FILES = [".py", ".txt", ".md", ".cpp", ".sh", ".java"]
 VERBOSE = True
 
 def parse_question(question):
-
+    include_past_chat = False
     # Find all positions that match // 
     positions = [m.start() for m in re.finditer(r"\\", question)]
     if not positions:
-        return question
+        return question, False
     # Extract the comments and their positions
     comments = [question[pos:].strip() for pos in positions[::2]]
     positions = positions[1::2]
@@ -31,9 +32,12 @@ def parse_question(question):
     for p in re.finditer(r"\\", question):
         position_start = p.start()
         cmd = question[position_start+1:].split(' ')[0].split("{")[0]
-        position_end = position_start + len(cmd)
+        position_end = position_start + len(cmd) + 2
 
-        if cmd.lower() == "insert":
+        if cmd.lower() == "cont":
+            include_past_chat = True
+            question = question[:position_start] + question[(position_start+6):]
+        elif cmd.lower() == "insert":
             # Find that {} brackets behind the command and get the text inside
             pattern = r"\{(.*?)\}"
             match = re.search(pattern, question[position_start:])
@@ -47,7 +51,7 @@ def parse_question(question):
                         content = file.read()
                 except FileNotFoundError:
                     print(f"Error: File '{path}' not found.")
-                    return question, []
+                    return question, False
             else:
                 # Load all files from the path up to a depth of 2 into a dictionary
                 file_dict = {}
@@ -81,36 +85,45 @@ def parse_question(question):
                     continue
             question = question[:position_start] + f"\n{content}\n" + question[match.end():]
 
-    return question
+    return question, include_past_chat
+
+def extract_url(string):
+    url_pattern = r'(https?://[^\s]+)'
+    match = re.search(url_pattern, string)
+    return match.group(0) if match else None
 
     
 def main():
     question = " ".join(sys.argv[1:])
-    question = parse_question(question)
-
     config = load_config()
 
-
     chat_client = LLMClient(hostname=config["hostname"], port=config["port"])
+    commands = load_commands()
 
     system_call = config["system_call"]
+
 
     messages = [
         {"role": "system", "content": system_call},
         {"role": "user", "content": question}
     ]
+    messages = parse_commands(messages, commands)
     start_time = time.time()
     response = chat_client.request_response(messages)
     end_time = time.time()
-    print(colored("Question:", "yellow"))
+    messages += [{"role": "assistant", "content": response}]
+    print(colored("User:", "yellow"))
     print(question)
     verbose_string = f"[t: {end_time - start_time:.3f}s] " if VERBOSE else ""
     print(colored("Assistant:", "green") + verbose_string)
 
+    url = extract_url(response)
+    if url: webbrowser.open(url)
+
     parser = MarkdownIt(renderer_cls=RendererPlain)
     response = parser.render(response)
     print(response)
-
+    save_chat(messages)    
 
 if __name__ == "__main__":
     main()

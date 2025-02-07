@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.activate = activate;
 const vscode = require("vscode");
 const vscode_1 = require("vscode");
-const node_fetch_1 = require("node-fetch");
+const inlineCompletions_1 = require("./inlineCompletions");
 // Global configuration variables.
 let debounceDelay = 1000;
 let contextWindowSize = 5;
@@ -53,127 +53,48 @@ function activate(context) {
             }
         }
     });
+    // Define the idle delay (in milliseconds)
+    let idleTimer;
+    const inlineCompletions = new inlineCompletions_1.InlineCompletions('http://localhost:5000/request_service/inline_completion', contextWindowSize);
     const provider = {
         async provideInlineCompletionItems(document, position, completionContext, token) {
-            // Get the current line text.
-            const currentLine = document.lineAt(position.line).text;
-            // 1. Only provide inline completions if the cursor is at the end of the line.
-            if (position.character !== currentLine.length) {
-                return { items: [] };
+            // Reset the timer on every text change
+            if (idleTimer) {
+                clearTimeout(idleTimer);
             }
-            // 2. Do not complete if the line is a comment.
-            // Use the document's languageId to decide which comment marker to use.
-            const languageId = document.languageId;
-            const trimmedLine = currentLine.trimStart();
-            if ((languageId === 'python' && trimmedLine.startsWith('#')) ||
-                (languageId === 'cpp' && trimmedLine.startsWith('//'))) {
-                return { items: [] };
-            }
-            // 3. If an API call for this same line is already pending, simply await it.
-            if (globalPromise &&
-                lastContext &&
-                lastContext.document.uri.toString() === document.uri.toString() &&
-                lastContext.position.line === position.line &&
-                lastContext.position.character === position.character) {
-                try {
-                    const completionText = await globalPromise;
-                    if (token.isCancellationRequested || !completionText) {
-                        return { items: [] };
-                    }
-                    return createInlineCompletionItem(position, completionText);
-                }
-                catch (e) {
-                    return { items: [] };
-                }
-            }
-            else {
-                // If a pending call exists for a different location, cancel it.
-                if (debounceTimer) {
-                    clearTimeout(debounceTimer);
-                    debounceTimer = undefined;
-                }
-                globalPromise = undefined;
-            }
-            // Update the context so that the latest parameters are used.
-            lastContext = { document, position, completionContext };
-            // Create a new promise for the API call (debounced).
-            globalPromise = new Promise((resolve, reject) => {
-                debounceTimer = setTimeout(async () => {
-                    if (!lastContext) {
-                        resolve('');
-                        return;
-                    }
-                    const { document, position } = lastContext;
-                    // Gather context lines before the current position.
-                    const previousLines = [];
-                    for (let i = position.line - 1; i >= 0 && previousLines.length < contextWindowSize; i--) {
-                        const lineText = document.lineAt(i).text;
-                        if (lineText.trim().length > 0) {
-                            previousLines.unshift(lineText);
-                        }
-                    }
-                    // Gather context lines after the current position.
-                    const upcomingLines = [];
-                    for (let i = position.line + 1; i < document.lineCount && upcomingLines.length < contextWindowSize; i++) {
-                        const lineText = document.lineAt(i).text;
-                        if (lineText.trim().length > 0) {
-                            upcomingLines.push(lineText);
-                        }
-                    }
-                    const contextBefore = previousLines.join('\n');
-                    const currentLine = document.lineAt(position).text;
-                    const contextAfter = upcomingLines.join('\n');
-                    // Use the file extension to provide language info if needed.
-                    const fileName = document.fileName;
-                    const dotIndex = fileName.lastIndexOf('.');
-                    const language = dotIndex >= 0 ? fileName.substring(dotIndex + 1).toLowerCase() : 'plaintext';
-                    console.log('Context for LLM:', { contextBefore, line: currentLine, contextAfter });
-                    // Call the LLM server.
-                    const serverUrl = 'http://localhost:5000/request_service/inline_completion';
-                    let completionText = '';
+            return new Promise((resolve) => {
+                idleTimer = setTimeout(async () => {
                     try {
-                        const response = await (0, node_fetch_1.default)(serverUrl, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                context_before: contextBefore,
-                                line: currentLine,
-                                context_after: contextAfter,
-                                language: language,
-                            }),
-                        });
-                        if (!response.ok) {
-                            console.error(`LLM server responded with status ${response.status}`);
-                            resolve('');
+                        // Get the current line text
+                        const currentLine = document.lineAt(position.line).text;
+                        // Only provide inline completions if the cursor is at the end of the line
+                        if (position.character !== currentLine.length) {
+                            resolve(undefined);
                             return;
                         }
-                        const data = await response.json();
-                        completionText = data.response;
-                        console.log('LLM completion (from API):', data);
+                        // Check if the current line is a comment
+                        const isComment = currentLine.trim().startsWith('//') || currentLine.trim().startsWith('/*');
+                        if (isComment) {
+                            resolve(undefined);
+                            return;
+                        }
+                        // Get completion from InlineCompletions
+                        const completionText = await inlineCompletions.getCompletion(document, position);
+                        if (completionText) {
+                            // Create and return the inline completion item
+                            const completionItem = createInlineCompletionItem(position, completionText);
+                            resolve(completionItem);
+                        }
+                        else {
+                            resolve(undefined);
+                        }
                     }
                     catch (error) {
-                        console.error('Error calling LLM server:', error);
-                        resolve('');
-                        return;
+                        console.error('Error in provideInlineCompletionItems:', error);
+                        resolve(undefined);
                     }
-                    finally {
-                        // Clear the global promise and timer so that future requests can start fresh.
-                        globalPromise = undefined;
-                        debounceTimer = undefined;
-                    }
-                    resolve(completionText);
                 }, debounceDelay);
             });
-            try {
-                const completionText = await globalPromise;
-                if (token.isCancellationRequested || !completionText) {
-                    return { items: [] };
-                }
-                return createInlineCompletionItem(position, completionText);
-            }
-            catch (e) {
-                return { items: [] };
-            }
         },
     };
     context.subscriptions.push(vscode.languages.registerInlineCompletionItemProvider({ pattern: '**' }, provider));
@@ -182,13 +103,12 @@ function activate(context) {
  * Helper function to create an inline completion item given the starting position and the text.
  */
 function createInlineCompletionItem(position, completionText) {
-    const lines = completionText.split('\n');
-    const lastLineLength = lines[lines.length - 1].length;
-    const lineOffset = lines.length - 1;
+    const lines = completionText.split('\n')[0];
     const endPosition = position.with({
-        line: position.line + lineOffset,
-        character: lastLineLength,
+        line: position.line,
+        character: position.character + completionText.length,
     });
+    console.log('Created inline completion item:', completionText, position, endPosition);
     const inlineItem = {
         insertText: completionText,
         range: new vscode_1.Range(position, endPosition),
