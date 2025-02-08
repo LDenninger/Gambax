@@ -16,6 +16,12 @@
             "params": {
                 "model_name": "dall-e-3"
             }
+        },
+        {
+            "target": "gambax.services.gambax_coder.GambaxCoder",
+            "params": {
+                "verifier": "test_suite"
+            }
         }
     ],
     "commands": [

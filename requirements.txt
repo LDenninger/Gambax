@@ -5,3 +5,5 @@ openai
 flask
 tqdm
 termcolor
+yaspin
+pyperclip

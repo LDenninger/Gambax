@@ -25,6 +25,7 @@ setup(
     entry_points={
         'console_scripts': [
             'gambax=gambax.interfaces.cli.main:main',
+            'gambax-code=gambax.interfaces.cli.coder:main',
             'gambax-server=gambax.core.server:launch_server',
             'gambax-config=gambax.config.cli:main',
         ],

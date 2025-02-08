@@ -49,7 +49,7 @@ def setup_logger(name: str='mainlogger', color:bool=True, log_level=logging.DEBU
     ch.setLevel(log_level)
     if color:
         formatter = _ColorfulFormatter(
-            colored("[%(asctime)s %(name)s %(levelname)s]: ", "green") + "%(message)s",
+            colored("[%(asctime)s %(name)s]: ", "green") + "%(message)s",
             datefmt="%m/%d %H:%M:%S",
             root_name=name,
             abbrev_name=str(abbrev_name),

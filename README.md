@@ -7,10 +7,16 @@ Gambax is an easy-to-use development tool for (distributed) LLM applications. It
 <ul style="list-style: none; margin: 0; padding: 0.1;">
   <li>💥 Local server hosting an API for the LLMs</li>
   <li>💥 Command-line tool to chat with your LLM</li>
+  <li>💥 Advanced coding agent employing iterative reasoning to generated high-quality code</li>
   <li>💥 Easy definition of services for advanced functionalities</li>
-  <li>💥 Seamless integration with existing LLM framework</li>
+  <li>💥 Seamless integration with existing LLM frameworks</li>
   <li>💥 VS Code extension for inline completion</li>
 </ul>
+
+## 📰 News
+
+ - We added a just-in-time server called `JitLLMServer` that combines the `LLMServer` and `LLMClient` into a local API to the models. This allows all Gambax functionalities to be run without a separately launched `LLMServer`
+ - A proof-of-concept of the `GambaxCoder` which can be used via `gambax-coder`. It recursively produces code and tests to verify its solution. Finally, it is passed through a refinement stage that refactors and cleans up code. This ensures high-quality, efficient and working code.
 
 ## 🔥 Upcoming 
 <ul style="list-style: none; margin: 0; padding: 0.2;">
@@ -82,7 +88,12 @@ print(response)
 
 ## 💻 Command-Line Tool
 
-**Format:** `gambax <question>`
+**Format:** `gambax <question>` <br/>
+If code is produced it is automatically copied to the clipboard for you to insert.
+
+<div style="text-align: left;">
+    <img src="misc/cli_examples/ex3.png" alt="Gambax" />
+</div>
 
 ### Special Commands
 Special commands have the prefix `\\` a command followed by optional arguments in `{}` brackets.
