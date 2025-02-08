@@ -1,5 +1,13 @@
 {
-    "model": "gpt-4o-mini",
+    "model": {
+        "target": "gambax.models.chatgpt.ChatGPT",
+        "params": {
+            "model_name": "gpt-4o-mini",
+            "temperature": 0.5,
+            "max_tokens": 5000,
+            "top_p": 1.0
+        }
+    },
     "port": 5000,
     "hostname": "0.0.0.0",
     "system_call": "You are a helpful AI assistant. Answer questions concise and correctly. Return code plainly without explanations. Format your response in Markdown.",
@@ -8,7 +16,7 @@
         {
             "target": "gambax.services.inline_completion.InlineCompletion",
             "params": {
-                "model_name": "gpt-4o-mini"
+                "model_name": "mistral"
             }
         },
         {

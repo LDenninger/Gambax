@@ -5,6 +5,7 @@ import re
 from pydantic import BaseModel
 from gambax.models.ModelInterface import ModelInterface
 from gambax.models.chatgpt import ChatGPT
+from gambax.models.ollama import OLlama
 from gambax.services import Service
 
 SYSTEM_CALL = """
@@ -48,9 +49,9 @@ class InlineCompletion(Service):
 
     name = "inline_completion"
 
-    def __init__(self, model_name: Literal["gpt-3.5-turbo", "gpt-4o-mini"] = "gpt-3.5-turbo", system_call: str=SYSTEM_CALL):
+    def __init__(self, model_name: Literal["gpt-3.5-turbo", "gpt-4o-mini", "mistral"] = "gpt-3.5-turbo", system_call: str=SYSTEM_CALL):
 
-        super().__init__(model_name, input_signature=["line", "context_before", "context_after", "language"], output_signature=['line_diff'])
+        super().__init__(self.name, input_signature=["line", "context_before", "context_after", "language"], output_signature=['line_diff'])
 
         self.model = None
         self.setup_model(model_name)
@@ -58,7 +59,11 @@ class InlineCompletion(Service):
         self.system_call = system_call
 
     def setup_model(self, model_name: Literal["gpt-3.5-turbo", "gpt-4o-mini"]):
-        self.model = ChatGPT(model_name=model_name, max_tokens = 300)
+
+        if model_name.startswith("gpt"):
+            self.model = ChatGPT(model_name=model_name, max_tokens = 300)
+        else:
+            self.model = OLlama(model=model_name)
 
     def request_impl(self, line: str, context_before: str, context_after: str, language: str=None):
 
@@ -69,15 +74,25 @@ class InlineCompletion(Service):
         print(f"Input: {user_message}")
         messages.append({"role": "user", "content": user_message})
         response = self.model(messages, functions=functions, function_call={"name": "return_inline_completion_output"})
-        
-        structured_output = response.get("arguments", {})
-        if structured_output != {} and "line_diff" in structured_output:
+        line_diff = None
+        #import ipdb; ipdb.set_trace()
+        if isinstance(response, str):
             try:
-                structured_output = json.loads(structured_output)
+                response = json.loads(response)
             except Exception as e:
-                print("Error: Failed to parse structured output!")
-                return ""
-            line_diff = self._parse_line_diff(structured_output["line_diff"], line)
+                match = re.search(r'"line_diff"\s*:\s*"([^"]*)"', response)
+                line_diff = match.group(1)
+        if line_diff is None:
+            structured_output = response.get("arguments", {})
+            if structured_output != {} and "line_diff" in structured_output:
+                try:
+                    structured_output = json.loads(structured_output)
+                except Exception as e:
+                    print("Error: Failed to parse structured output!")
+                    return ""
+                line_diff = structured_output["line_diff"]
+        if line_diff:
+            line_diff = self._parse_line_diff(line_diff, line)
             return line_diff
         return ""
     

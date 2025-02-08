@@ -198,6 +198,6 @@ class LLMClient:
 def launch_server():
     logger = setup_logger("LLMServer")
     config = load_config()
-    model = load_model(config["model"])
+    model = instantiate_from_config(config["model"])
     server = LLMServer(model, service_config=config["services"] if "services" in config else [])
     server.run(host=config["hostname"], port=config["port"])

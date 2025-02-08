@@ -1,0 +1,11 @@
+{
+    "chatgpt": {
+        "target": "gambax.models.chatgpt.ChatGPT",
+        "params": {
+            "model_name": "gpt-4o-mini",
+            "temperature": 0.5,
+            "max_tokens": 5000,
+            "top_p": 1.0
+        }
+    }
+}

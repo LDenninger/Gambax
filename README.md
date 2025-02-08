@@ -13,6 +13,11 @@ Gambax is an easy-to-use development tool for (distributed) LLM applications. It
   <li>💥 VS Code extension for inline completion</li>
 </ul>
 
+### Package Summary
+**Interfaces:** [CLI](#command-line-tool), VS Code Inline Completions [coming soon], VS Code Chat bot [coming soon] <br/>
+**Models:** OpenAI ChatGPT, DeepSeek, OLlama, GPT4All, HuggingFace models <br/>
+**Services:** Inline Completions, Coding Agent, Image Generation, Speech2Text, Text2Speech [coming soon] 
+
 ## 📰 News
 
  - We added a just-in-time server called `JitLLMServer` that combines the `LLMServer` and `LLMClient` into a local API to the models. This allows all Gambax functionalities to be run without a separately launched `LLMServer`

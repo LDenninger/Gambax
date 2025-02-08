@@ -7,3 +7,5 @@ tqdm
 termcolor
 yaspin
 pyperclip
+ollama
+gpt4all 
