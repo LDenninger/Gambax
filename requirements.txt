@@ -9,3 +9,4 @@ yaspin
 pyperclip
 ollama
 gpt4all 
+rich
